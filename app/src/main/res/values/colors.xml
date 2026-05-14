@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <color name="fondo_neutro">#F0F4F8</color>
+    <color name="verde_app">#4CAF50</color>
+
+    <color name="tacho_azul">#4A90E2</color>       <color name="tacho_amarillo">#F5D040</color>   <color name="tacho_verde">#7ED321</color>      <color name="tacho_gris">#9E9E9E</color>       <color name="tacho_negro">#424242</color>      </resources>

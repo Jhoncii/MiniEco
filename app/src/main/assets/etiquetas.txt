@@ -1,0 +1,10 @@
+Batería
+Biológico
+Cartón
+Ropa
+Vidrio
+Metal
+Papel
+Plástico
+Zapatos
+Basura

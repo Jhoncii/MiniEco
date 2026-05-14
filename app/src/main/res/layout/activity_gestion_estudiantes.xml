@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="?android:attr/colorBackground">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Matricular Estudiante"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:textColor="?android:attr/textColorPrimary"
+        android:layout_marginBottom="24dp"/>
+
+    <EditText
+        android:id="@+id/etNombreEstudiante"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Nombres (Solo letras)"
+        android:textColor="?android:attr/textColorPrimary"/>
+
+    <EditText
+        android:id="@+id/etApellidoEstudiante"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:hint="Apellidos (Solo letras)"
+        android:textColor="?android:attr/textColorPrimary"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Asignar a Curso:"
+        android:layout_marginTop="20dp"
+        android:textColor="?android:attr/textColorPrimary"/>
+    <Spinner
+        android:id="@+id/spinnerCursos"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="@android:drawable/btn_dropdown"/>
+
+    <Button
+        android:id="@+id/btnGuardarEstudiante"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_marginTop="32dp"
+        android:text="Matricular"
+        android:backgroundTint="#FF9800"/>
+</LinearLayout>

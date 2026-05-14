@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_camara"
+        android:icon="@android:drawable/ic_menu_camera"
+        android:title="En vivo" />
+    <item
+        android:id="@+id/nav_foto"
+        android:icon="@android:drawable/ic_menu_gallery"
+        android:title="Foto/Galería" />
+    <item
+        android:id="@+id/nav_info"
+        android:icon="@android:drawable/ic_menu_info_details"
+        android:title="MiniEco" />
+</menu>

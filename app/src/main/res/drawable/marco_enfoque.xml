@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <!-- El centro será totalmente transparente para ver la cámara -->
+    <solid android:color="@android:color/transparent" />
+    <!-- El borde será verde, de 4dp de grosor -->
+    <stroke
+        android:width="4dp"
+        android:color="#4CAF50" />
+    <!-- Esquinas redondeadas para que se vea amigable -->
+    <corners android:radius="24dp" />
+</shape>
