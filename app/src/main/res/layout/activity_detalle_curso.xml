@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="?attr/colorSurface">
+
+    <TextView
+        android:id="@+id/tvNombreCursoDetalle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Nombre del Curso"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:textColor="?attr/colorOnSurface"
+        android:textAlignment="center"
+        android:layout_marginBottom="8dp"/>
+
+    <TextView
+        android:id="@+id/tvDescCursoDetalle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Descripción..."
+        android:textSize="16sp"
+        android:textAlignment="center"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        android:layout_marginBottom="32dp"/>
+
+    <Button
+        android:id="@+id/btnGestionarReglas"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:text="Configurar Reglas (Desechos)"
+        android:layout_marginBottom="16dp"/>
+
+    <Button
+        android:id="@+id/btnGestionarEstudiantes"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:text="Estudiantes y Reportes"
+        android:layout_marginBottom="32dp"/>
+
+    <Button
+        android:id="@+id/btnEditarCurso"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Editar Curso"
+        android:backgroundTint="#FF9800"
+        android:layout_marginBottom="16dp"/>
+
+    <Button
+        android:id="@+id/btnEliminarCurso"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Eliminar Curso"
+        android:backgroundTint="#F44336"/>
+
+</LinearLayout>

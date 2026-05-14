@@ -271,6 +271,15 @@
                 android:textSize="18sp"
                 app:cornerRadius="12dp"
                 android:backgroundTint="#2E7D32" />
+            <Button
+                android:id="@+id/btnQuitarReglasMain"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="32dp"
+                android:layout_marginTop="8dp"
+                android:text="Quitar Reglas del Curso"
+                android:backgroundTint="#FF5252"
+                android:visibility="gone" />
             <TextView
                 android:id="@+id/tvActualizaciones"
                 android:layout_width="wrap_content"

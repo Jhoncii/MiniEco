@@ -3,36 +3,42 @@ package com.johnpena.minieco
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.button.MaterialButton
 
 class AdminPanelActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        supportActionBar?.hide()
         setContentView(R.layout.activity_admin_panel)
 
-        findViewById<Button>(R.id.btnCursos).setOnClickListener {
+        val btnCursos = findViewById<MaterialButton>(R.id.btnGestionCursos)
+        val btnCambiarPass = findViewById<MaterialButton>(R.id.btnCambiarPassword)
+        val btnCerrarSesion = findViewById<MaterialButton>(R.id.btnCerrarSesion)
+
+        btnCursos.setOnClickListener {
             startActivity(Intent(this, GestionCursosActivity::class.java))
         }
 
-        findViewById<Button>(R.id.btnEstudiantes).setOnClickListener {
-            startActivity(Intent(this, GestionEstudiantesActivity::class.java))
+        btnCambiarPass.setOnClickListener {
+            // En la siguiente fase programamos la ventanita de pedir contraseña antigua
+            Toast.makeText(this, "Pronto: Cambiar contraseña", Toast.LENGTH_SHORT).show()
         }
 
-        findViewById<Button>(R.id.btnRegistros).setOnClickListener {
-            Toast.makeText(this, "Próximamente: Módulo de Exámenes", Toast.LENGTH_SHORT).show()
-        }
 
-        findViewById<Button>(R.id.btnCerrarSesion).setOnClickListener {
+        btnCerrarSesion.setOnClickListener {
+            // 1. Apagar reglas, CERRAR SESIÓN real y volver al inicio
             val prefs = getSharedPreferences("MiniEcoPrefs", Context.MODE_PRIVATE)
-            prefs.edit().putBoolean("is_logged_in", false).apply()
+            prefs.edit()
+                .remove("cursoActivoId")
+                .putBoolean("is_logged_in", false) // <-- ESTO FALTABA PARA MATAR LA SESIÓN
+                .apply()
 
+            Toast.makeText(this, "Sesión cerrada. Reglas por defecto activadas.", Toast.LENGTH_SHORT).show()
             val intent = Intent(this, MainActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(intent)
-            finish()
+            finish() // Destruimos esta pantalla para que no pueda volver atrás
         }
     }
 }

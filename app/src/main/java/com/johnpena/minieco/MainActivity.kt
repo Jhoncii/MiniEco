@@ -31,8 +31,12 @@ import androidx.camera.view.PreviewView
 import androidx.cardview.widget.CardView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.johnpena.minieco.database.MiniEcoDatabase
+import com.johnpena.minieco.database.Regla
+import kotlinx.coroutines.launch
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -68,6 +72,11 @@ class MainActivity : AppCompatActivity() {
     private var audioColorActualVivo: Int = 0
     private var audioDesechoActualFoto: Int = 0
     private var audioColorActualFoto: Int = 0
+
+    // --- CEREBRO DE REGLAS ---
+    private lateinit var database: MiniEcoDatabase
+    private var reglasActivas: List<Regla> = emptyList()
+    private var cursoActivoId: Int = -1
 
     private val solicitarPermisoCamara = registerForActivityResult(ActivityResultContracts.RequestPermission()) { concedido ->
         if (concedido) {
@@ -109,6 +118,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         supportActionBar?.hide()
         setContentView(R.layout.activity_main)
+
+        database = MiniEcoDatabase.getDatabase(this)
 
         layoutSplash = findViewById(R.id.layoutSplash)
         bottomNavigation = findViewById(R.id.bottomNavigation)
@@ -173,6 +184,8 @@ class MainActivity : AppCompatActivity() {
                 txtMaterial.text = "🔍 Escaneando..."
                 txtConsejo.text = "Acércate un poco más y centra el objeto en el cuadro."
                 tarjetaResultadosVivo.setCardBackgroundColor(Color.WHITE)
+                txtMaterial.setTextColor(Color.BLACK)
+                txtConsejo.setTextColor(Color.DKGRAY)
                 restablecerAnimaciones(tarjetaResultadosVivo)
                 btnParlanteVivo.visibility = View.GONE
                 AudioPlayerHelper.detener()
@@ -184,36 +197,64 @@ class MainActivity : AppCompatActivity() {
 
         val btnAccesoProfesor = findViewById<Button>(R.id.btnAccesoProfesor)
         btnAccesoProfesor.setOnClickListener {
-            val intent = Intent(this, LoginActivity::class.java)
-            startActivity(intent)
+            val prefs = getSharedPreferences("MiniEcoPrefs", Context.MODE_PRIVATE)
+            val isLoggedIn = prefs.getBoolean("is_logged_in", false)
+
+            if (isLoggedIn) {
+                startActivity(Intent(this, AdminPanelActivity::class.java))
+            } else {
+                startActivity(Intent(this, LoginActivity::class.java))
+            }
+        }
+
+        val btnQuitarReglasMain = findViewById<Button>(R.id.btnQuitarReglasMain)
+        btnQuitarReglasMain.setOnClickListener {
+            val prefs = getSharedPreferences("MiniEcoPrefs", Context.MODE_PRIVATE)
+            prefs.edit().remove("cursoActivoId").apply()
+            cursoActivoId = -1
+            reglasActivas = emptyList()
+            btnQuitarReglasMain.isEnabled = false
+            btnQuitarReglasMain.alpha = 0.5f
+            Toast.makeText(this, "Reglas desactivadas. MiniEco ha vuelto a la normalidad.", Toast.LENGTH_SHORT).show()
         }
 
         val tvActualizaciones = findViewById<TextView>(R.id.tvActualizaciones)
         tvActualizaciones.setOnClickListener {
             val url = "https://drive.google.com/drive/folders/1YyViO_cn4WBKtMW8Z_ejuYsTvUVSyk_q?usp=sharing"
-            val intent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url))
-            startActivity(intent)
+            startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url)))
         }
     }
 
     override fun onResume() {
         super.onResume()
-        val btnAcceso = findViewById<Button>(R.id.btnAccesoProfesor)
         val prefs = getSharedPreferences("MiniEcoPrefs", Context.MODE_PRIVATE)
         val isLoggedIn = prefs.getBoolean("is_logged_in", false)
+        cursoActivoId = prefs.getInt("cursoActivoId", -1)
 
-        if (isLoggedIn) {
-            btnAcceso.text = "Panel de Administración"
-            btnAcceso.setBackgroundColor(android.graphics.Color.parseColor("#1B5E20"))
-            btnAcceso.setOnClickListener {
-                startActivity(Intent(this, AdminPanelActivity::class.java))
+        val btnQuitarReglasMain = findViewById<Button>(R.id.btnQuitarReglasMain)
+        val btnAccesoProfesor = findViewById<Button>(R.id.btnAccesoProfesor)
+
+        if (cursoActivoId != -1) {
+            lifecycleScope.launch {
+                reglasActivas = database.miniEcoDao().obtenerReglasPorCurso(cursoActivoId)
             }
         } else {
-            btnAcceso.text = "Acceso Profesores"
-            btnAcceso.setBackgroundColor(android.graphics.Color.parseColor("#2E7D32"))
-            btnAcceso.setOnClickListener {
-                startActivity(Intent(this, LoginActivity::class.java))
+            reglasActivas = emptyList()
+        }
+
+        if (isLoggedIn) {
+            btnAccesoProfesor.text = "Panel de Profesores"
+            btnQuitarReglasMain.visibility = View.VISIBLE
+            if (cursoActivoId == -1) {
+                btnQuitarReglasMain.isEnabled = false
+                btnQuitarReglasMain.alpha = 0.5f
+            } else {
+                btnQuitarReglasMain.isEnabled = true
+                btnQuitarReglasMain.alpha = 1.0f
             }
+        } else {
+            btnAccesoProfesor.text = "Acceso Profesores"
+            btnQuitarReglasMain.visibility = View.GONE
         }
     }
 
@@ -235,11 +276,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun configurarModoOscuro() {
         val isNightTheme = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
-        if (isNightTheme == Configuration.UI_MODE_NIGHT_YES) {
-            btnModoOscuro.text = "☀️ Cambiar a Modo Claro"
-        } else {
-            btnModoOscuro.text = "🌙 Cambiar a Modo Oscuro"
-        }
+        btnModoOscuro.text = if (isNightTheme == Configuration.UI_MODE_NIGHT_YES) "☀️ Cambiar a Modo Claro" else "🌙 Cambiar a Modo Oscuro"
 
         btnModoOscuro.setOnClickListener {
             if (isNightTheme == Configuration.UI_MODE_NIGHT_YES) {
@@ -285,152 +322,215 @@ class MainActivity : AppCompatActivity() {
             try {
                 cameraProvider.unbindAll()
                 cameraProvider.bindToLifecycle(this, CameraSelector.DEFAULT_BACK_CAMERA, preview, imageAnalyzer)
-            } catch (exc: Exception) {
-            }
+            } catch (exc: Exception) {}
         }, ContextCompat.getMainExecutor(this))
     }
 
-    private fun actualizarInterfazEnVivo(material: String) {
+    private fun actualizarInterfazEnVivo(materialBruto: String) {
         runOnUiThread {
-            if (material == "Buscando" || material == "Inseguro") {
+            if (materialBruto == "Buscando" || materialBruto == "Inseguro") {
                 txtMaterial.text = "🔍 Escaneando..."
                 txtConsejo.text = "Acércate un poco más y centra el objeto en el cuadro."
                 tarjetaResultadosVivo.setCardBackgroundColor(Color.WHITE)
+                txtMaterial.setTextColor(Color.BLACK)
+                txtConsejo.setTextColor(Color.DKGRAY)
                 restablecerAnimaciones(tarjetaResultadosVivo)
                 btnParlanteVivo.visibility = View.GONE
                 return@runOnUiThread
             }
 
             viewFinder.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-            aplicarColores(material, txtMaterial, txtConsejo, tarjetaResultadosVivo)
 
-            btnParlanteVivo.visibility = View.VISIBLE
-            audioDesechoActualVivo = obtenerAudioDesecho(material)
-            audioColorActualVivo = obtenerAudioColorPorDefecto(material)
+            // LA MAGIA: Procesa y adapta la interfaz según modo profesor o normal
+            procesarDesechoEnUI(materialBruto, txtMaterial, txtConsejo, tarjetaResultadosVivo, true)
         }
     }
 
     private fun analizarFotoEstatica(bitmap: Bitmap) {
-        val resultado = clasificador.classifyImage(bitmap)
+        val materialBruto = clasificador.classifyImage(bitmap)
 
-        if (resultado == "Buscando" || resultado == "Inseguro") {
+        if (materialBruto == "Buscando" || materialBruto == "Inseguro") {
             txtResultadoFoto.text = "Mmm... no se detecta muy bien el objeto.\n\nColócalo o enfócalo bien en un fondo blanco."
             tarjetaResultadoFoto.setCardBackgroundColor(Color.WHITE)
+            txtResultadoFoto.setTextColor(Color.BLACK)
             restablecerAnimaciones(tarjetaResultadoFoto)
             btnParlanteFoto.visibility = View.GONE
             return
         }
 
-        aplicarColores(resultado, txtResultadoFoto, null, tarjetaResultadoFoto)
-
-        btnParlanteFoto.visibility = View.VISIBLE
-        audioDesechoActualFoto = obtenerAudioDesecho(resultado)
-        audioColorActualFoto = obtenerAudioColorPorDefecto(resultado)
+        procesarDesechoEnUI(materialBruto, txtResultadoFoto, null, tarjetaResultadoFoto, false)
     }
 
-    private fun restablecerAnimaciones(tarjeta: CardView) {
-        tarjeta.animate().cancel()
-        tarjeta.rotation = 0f
-        tarjeta.scaleX = 1f
-        tarjeta.scaleY = 1f
-        tarjeta.translationX = 0f
-        tarjeta.translationY = 0f
-        tarjeta.alpha = 1f
-    }
+    // =======================================================================
+    // CEREBRO DE CLASIFICACIÓN (Integra IA con Reglas o Defecto)
+    // =======================================================================
+    private fun procesarDesechoEnUI(materialBruto: String, txtTitulo: TextView, txtSubtitulo: TextView?, tarjeta: CardView, esVivo: Boolean) {
+        val desechoLimpio = normalizarNombreDesecho(materialBruto)
+        val audioDesecho = obtenerAudioDesecho(desechoLimpio)
 
-    // --- NUEVA LÓGICA DE 8 COLORES ---
-    private fun aplicarColores(material: String, txtTitulo: TextView, txtSubtitulo: TextView?, tarjeta: CardView) {
-        val nombreMayuscula = material.replaceFirstChar { it.uppercase() }
-        txtTitulo.text = "¡Es $nombreMayuscula!"
-
-        val textoConsejo: String
-        val colorTarjeta: Int
+        var textoConsejo = ""
+        var colorFondoHex = Color.WHITE
+        var audioColor = 0
+        var evaluado = true
 
         restablecerAnimaciones(tarjeta)
 
-        when (material.lowercase().trim()) {
-            "batería", "battery", "bateria", "baterías" -> {
-                colorTarjeta = Color.parseColor("#FFCDD2") // Rojo
-                textoConsejo = "⚠️ ¡Al tacho ROJO! 🔴\nResiduo peligroso y tóxico."
-                tarjeta.animate().translationX(15f).setDuration(80).withEndAction { tarjeta.animate().translationX(-15f).setDuration(80).withEndAction { tarjeta.animate().translationX(0f).setDuration(80).start() }.start() }.start()
+        if (cursoActivoId != -1 && reglasActivas.isNotEmpty()) {
+            // MODO PROFESORA
+            val regla = reglasActivas.find { it.tipoDesecho.equals(desechoLimpio, ignoreCase = true) }
+            if (regla != null) {
+                val colorProfe = regla.colorTacho
+                val config = obtenerConfigColor(colorProfe)
+                colorFondoHex = config.fondoHex
+                audioColor = config.audioRes
+                textoConsejo = "Regla de clase:\n¡Al tacho ${colorProfe.uppercase()}!"
+                animarTarjeta(colorProfe, tarjeta)
+            } else {
+                // No está en la regla del curso
+                evaluado = false
+                colorFondoHex = Color.parseColor("#E0E0E0") // Gris neutro opaco
+                textoConsejo = "Este desecho no se evalúa hoy."
             }
-            "biológico", "biological", "biologico" -> {
-                colorTarjeta = Color.parseColor("#D7CCC8") // Café
-                textoConsejo = "🍂 ¡Al tacho CAFÉ! 🟤\nRestos orgánicos."
-                tarjeta.animate().translationY(15f).setDuration(100).withEndAction { tarjeta.animate().translationY(0f).setDuration(100).start() }.start()
-            }
-            "papel", "cartón", "paper", "cardboard", "carton" -> {
-                colorTarjeta = Color.parseColor("#BBDEFB") // Azul
-                textoConsejo = "♻️ ¡Al tacho AZUL! 🔵\nPara reciclar papel y cartón."
-                tarjeta.animate().rotation(6f).setDuration(200).withEndAction { tarjeta.animate().rotation(-6f).setDuration(200).withEndAction { tarjeta.animate().rotation(0f).setDuration(200).start() }.start() }.start()
-            }
-            "metal" -> {
-                colorTarjeta = Color.parseColor("#FFF9C4") // Amarillo
-                textoConsejo = "♻️ ¡Al tacho AMARILLO! 🟡\nObjetos de metal."
-                tarjeta.animate().scaleY(0.85f).scaleX(0.9f).setDuration(200).withEndAction { tarjeta.animate().scaleY(1f).scaleX(1f).setDuration(200).start() }.start()
-            }
-            "vidrio", "glass" -> {
-                colorTarjeta = Color.parseColor("#C8E6C9") // Verde
-                textoConsejo = "♻️ ¡Al tacho VERDE! 🟢\nEnvases de vidrio."
-                tarjeta.animate().translationY(15f).setDuration(100).withEndAction { tarjeta.animate().translationY(0f).setDuration(100).start() }.start()
-            }
-            "plástico", "plastic", "plastico" -> {
-                colorTarjeta = Color.parseColor("#F5F5F5") // Blanco
-                textoConsejo = "♻️ ¡Al tacho BLANCO! ⚪\nEnvases de plástico."
-                tarjeta.animate().scaleY(0.85f).scaleX(0.9f).setDuration(200).withEndAction { tarjeta.animate().scaleY(1f).scaleX(1f).setDuration(200).start() }.start()
-            }
-            "ropa", "clothes", "zapatos", "shoes" -> {
-                colorTarjeta = Color.parseColor("#F3E5F5") // Morado suave (Donación)
-                textoConsejo = "💖 ¡Para DONACIÓN! 👕👟\nSi está en buen estado."
-                tarjeta.animate().translationY(-15f).setDuration(100).withEndAction { tarjeta.animate().translationY(0f).setDuration(100).start() }.start()
-            }
-            else -> { // trash / basura general
-                colorTarjeta = Color.parseColor("#ECEFF1") // Gris/Negro
-                textoConsejo = "🗑️ ¡Al tacho NEGRO! ⚫\nNo aprovechable (basura general)."
-                tarjeta.animate().translationX(15f).setDuration(80).withEndAction { tarjeta.animate().translationX(-15f).setDuration(80).withEndAction { tarjeta.animate().translationX(0f).setDuration(80).start() }.start() }.start()
-            }
+        } else {
+            // MODO NORMAL (Minieco Original)
+            val colorDefecto = obtenerColorPorDefecto(desechoLimpio)
+            val config = obtenerConfigColor(colorDefecto)
+            colorFondoHex = config.fondoHex
+            audioColor = config.audioRes
+            textoConsejo = obtenerConsejoPorDefecto(desechoLimpio)
+            animarTarjeta(colorDefecto, tarjeta)
         }
 
-        tarjeta.setCardBackgroundColor(colorTarjeta)
-
+        // Actualizar Textos
         if (txtSubtitulo != null) {
+            txtTitulo.text = "¡Es $desechoLimpio!"
             txtSubtitulo.text = textoConsejo
         } else {
-            txtTitulo.text = "¡Es $nombreMayuscula!\n\n$textoConsejo"
+            txtTitulo.text = "¡Es $desechoLimpio!\n\n$textoConsejo"
+        }
+
+        // Aplicar Colores
+        tarjeta.setCardBackgroundColor(colorFondoHex)
+        if (!evaluado) {
+            txtTitulo.setTextColor(Color.DKGRAY)
+            txtSubtitulo?.setTextColor(Color.DKGRAY)
+        } else {
+            txtTitulo.setTextColor(Color.BLACK)
+            txtSubtitulo?.setTextColor(Color.BLACK)
+        }
+
+        // Actualizar Audios
+        val btnParlante = if (esVivo) btnParlanteVivo else btnParlanteFoto
+        if (evaluado && audioDesecho != 0 && audioColor != 0) {
+            btnParlante.visibility = View.VISIBLE
+            if (esVivo) {
+                audioDesechoActualVivo = audioDesecho
+                audioColorActualVivo = audioColor
+            } else {
+                audioDesechoActualFoto = audioDesecho
+                audioColorActualFoto = audioColor
+            }
+        } else {
+            btnParlante.visibility = View.GONE
         }
     }
 
-    // --- NUEVO MAPEO DE AUDIOS (CORREGIDO CON TILDES) ---
-    private fun obtenerAudioDesecho(claseDetectada: String): Int {
-        return when (claseDetectada.lowercase().trim()) {
-            "battery", "bateria", "batería", "baterías" -> R.raw.bateria
-            "biological", "biologico", "biológico" -> R.raw.biologico
-            "cardboard", "carton", "cartón" -> R.raw.carton
-            "clothes", "ropa" -> R.raw.ropa
-            "glass", "vidrio" -> R.raw.vidrio
-            "metal" -> R.raw.metal
-            "paper", "papel" -> R.raw.papel
-            "plastic", "plastico", "plástico" -> R.raw.plastico
-            "shoes", "zapatos" -> R.raw.zapatos
+    // --- NORMALIZAR LO QUE DICE LA IA A LOS 10 EXACTOS ---
+    private fun normalizarNombreDesecho(iaOutput: String): String {
+        return when (iaOutput.lowercase().trim()) {
+            "battery", "bateria", "batería", "baterías" -> "Batería"
+            "biological", "biologico", "biológico" -> "Biológico"
+            "paper", "papel" -> "Papel"
+            "cardboard", "carton", "cartón" -> "Cartón"
+            "metal" -> "Metal"
+            "glass", "vidrio" -> "Vidrio"
+            "plastic", "plastico", "plástico" -> "Plástico"
+            "clothes", "ropa" -> "Ropa"
+            "shoes", "zapatos" -> "Zapatos"
+            else -> "Basura General"
+        }
+    }
+
+    // --- MAPEO EXACTO A LOS 8 COLORES PERMITIDOS ---
+    private fun obtenerConfigColor(colorTacho: String): ConfigColor {
+        return when (colorTacho.lowercase().trim()) {
+            "rojo" -> ConfigColor(Color.parseColor("#FFCDD2"), R.raw.rojo)
+            "café", "cafe" -> ConfigColor(Color.parseColor("#D7CCC8"), R.raw.cafe)
+            "azul" -> ConfigColor(Color.parseColor("#BBDEFB"), R.raw.azul)
+            "amarillo" -> ConfigColor(Color.parseColor("#FFF9C4"), R.raw.amarillo)
+            "verde" -> ConfigColor(Color.parseColor("#C8E6C9"), R.raw.verde)
+            "negro" -> ConfigColor(Color.parseColor("#ECEFF1"), R.raw.negro)
+            "blanco" -> ConfigColor(Color.parseColor("#F5F5F5"), R.raw.blanco)
+            "donación", "donacion", "para donación" -> ConfigColor(Color.parseColor("#F3E5F5"), R.raw.donacion)
+            else -> ConfigColor(Color.WHITE, 0)
+        }
+    }
+
+    // --- POR DEFECTO PARA MODO NORMAL ---
+    private fun obtenerColorPorDefecto(desecho: String): String {
+        return when (desecho) {
+            "Batería" -> "Rojo"
+            "Biológico" -> "Café"
+            "Papel", "Cartón" -> "Azul"
+            "Metal" -> "Amarillo"
+            "Vidrio" -> "Verde"
+            "Plástico" -> "Blanco"
+            "Ropa", "Zapatos" -> "Donación"
+            else -> "Negro"
+        }
+    }
+
+    private fun obtenerConsejoPorDefecto(desecho: String): String {
+        return when (desecho) {
+            "Batería" -> "⚠️ ¡Al tacho ROJO! 🔴\nResiduo peligroso y tóxico."
+            "Biológico" -> "🍂 ¡Al tacho CAFÉ! 🟤\nRestos orgánicos."
+            "Papel", "Cartón" -> "♻️ ¡Al tacho AZUL! 🔵\nPara reciclar papel y cartón."
+            "Metal" -> "♻️ ¡Al tacho AMARILLO! 🟡\nObjetos de metal."
+            "Vidrio" -> "♻️ ¡Al tacho VERDE! 🟢\nEnvases de vidrio."
+            "Plástico" -> "♻️ ¡Al tacho BLANCO! ⚪\nEnvases de plástico."
+            "Ropa", "Zapatos" -> "💖 ¡Para DONACIÓN! 👕👟\nSi está en buen estado."
+            else -> "🗑️ ¡Al tacho NEGRO! ⚫\nNo aprovechable (basura general)."
+        }
+    }
+
+    private fun obtenerAudioDesecho(desecho: String): Int {
+        return when (desecho) {
+            "Batería" -> R.raw.bateria
+            "Biológico" -> R.raw.biologico
+            "Cartón" -> R.raw.carton
+            "Papel" -> R.raw.papel
+            "Ropa" -> R.raw.ropa
+            "Vidrio" -> R.raw.vidrio
+            "Metal" -> R.raw.metal
+            "Plástico" -> R.raw.plastico
+            "Zapatos" -> R.raw.zapatos
             else -> R.raw.basura
         }
     }
 
-    private fun obtenerAudioColorPorDefecto(claseDetectada: String): Int {
-        return when (claseDetectada.lowercase().trim()) {
-            "battery", "bateria", "batería", "baterías" -> R.raw.rojo
-            "biological", "biologico", "biológico" -> R.raw.cafe
-            "paper", "papel", "cardboard", "carton", "cartón" -> R.raw.azul
-            "metal" -> R.raw.amarillo
-            "glass", "vidrio" -> R.raw.verde
-            "plastic", "plastico", "plástico" -> R.raw.blanco
-            "clothes", "ropa", "shoes", "zapatos" -> R.raw.donacion
-            else -> R.raw.negro
+    // --- ANIMACIONES ORIGINALES CONSERVADAS ---
+    private fun animarTarjeta(colorTacho: String, tarjeta: CardView) {
+        when (colorTacho.lowercase().trim()) {
+            "rojo", "negro" -> tarjeta.animate().translationX(15f).setDuration(80).withEndAction { tarjeta.animate().translationX(-15f).setDuration(80).withEndAction { tarjeta.animate().translationX(0f).setDuration(80).start() }.start() }.start()
+            "café", "cafe", "verde" -> tarjeta.animate().translationY(15f).setDuration(100).withEndAction { tarjeta.animate().translationY(0f).setDuration(100).start() }.start()
+            "azul" -> tarjeta.animate().rotation(6f).setDuration(200).withEndAction { tarjeta.animate().rotation(-6f).setDuration(200).withEndAction { tarjeta.animate().rotation(0f).setDuration(200).start() }.start() }.start()
+            "amarillo", "blanco" -> tarjeta.animate().scaleY(0.85f).scaleX(0.9f).setDuration(200).withEndAction { tarjeta.animate().scaleY(1f).scaleX(1f).setDuration(200).start() }.start()
+            "donación", "donacion", "para donación" -> tarjeta.animate().translationY(-15f).setDuration(100).withEndAction { tarjeta.animate().translationY(0f).setDuration(100).start() }.start()
         }
     }
+
+    private fun restablecerAnimaciones(tarjeta: CardView) {
+        tarjeta.animate().cancel()
+        tarjeta.rotation = 0f; tarjeta.scaleX = 1f; tarjeta.scaleY = 1f
+        tarjeta.translationX = 0f; tarjeta.translationY = 0f; tarjeta.alpha = 1f
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         cameraExecutor.shutdown()
         AudioPlayerHelper.detener()
     }
 }
+
+// Clase de apoyo
+data class ConfigColor(val fondoHex: Int, val audioRes: Int)

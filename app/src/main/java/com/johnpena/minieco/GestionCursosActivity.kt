@@ -1,98 +1,130 @@
 package com.johnpena.minieco
 
-import android.database.sqlite.SQLiteConstraintException
+import android.content.Intent
 import android.os.Bundle
-import android.widget.*
+import android.widget.EditText
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.johnpena.minieco.database.Curso
+import com.johnpena.minieco.database.MiniEcoDatabase
 import kotlinx.coroutines.launch
 
 class GestionCursosActivity : AppCompatActivity() {
 
-    private lateinit var db: AppDatabase
-    private var listaCursos = listOf<Curso>()
-
-    private val misDesechos = arrayOf("battery", "biological", "cardboard", "clothes", "glass", "metal", "paper", "plastic", "shoes", "trash")
-
-    // --- AQUÍ ESTÁN TUS 8 NUEVOS COLORES ---
-    private val misTachos = arrayOf(
-        "Rojo (Peligrosos)",
-        "Café (Orgánicos)",
-        "Azul (Papel/Cartón)",
-        "Amarillo (Metal)",
-        "Verde (Vidrio)",
-        "Blanco (Plástico)",
-        "Negro (Basura General)",
-        "Donación (Ropa/Zapatos)"
-    )
+    private lateinit var database: MiniEcoDatabase
+    private lateinit var adapter: CursoAdapter
+    private lateinit var rvCursos: RecyclerView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        supportActionBar?.hide()
         setContentView(R.layout.activity_gestion_cursos)
-        db = AppDatabase.getDatabase(this)
 
-        val etNombreCurso = findViewById<EditText>(R.id.etNombreCurso)
-        val btnCrearCurso = findViewById<Button>(R.id.btnCrearCurso)
+        database = MiniEcoDatabase.getDatabase(this)
+        rvCursos = findViewById(R.id.rvCursos)
+        rvCursos.layoutManager = LinearLayoutManager(this)
 
-        val spinnerCursos = findViewById<Spinner>(R.id.spinnerCursos)
-        val spinnerDesechos = findViewById<Spinner>(R.id.spinnerDesechos)
-        val spinnerColores = findViewById<Spinner>(R.id.spinnerColores)
-        val etDescripcion = findViewById<EditText>(R.id.etDescripcion)
-        val btnAgregarRegla = findViewById<Button>(R.id.btnAgregarRegla)
+        val fabAgregar = findViewById<FloatingActionButton>(R.id.fabAgregarCurso)
 
-        spinnerDesechos.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, misDesechos)
-        spinnerColores.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, misTachos)
+        // Inicializamos el Adapter que controla las tarjetas
+        adapter = CursoAdapter(
+            cursos = emptyList(),
+            context = this,
+            onCursoClick = { curso ->
+                val intent = Intent(this, DetalleCursoActivity::class.java)
+                intent.putExtra("CURSO_ID", curso.id)
+                intent.putExtra("CURSO_NOMBRE", curso.nombre)
+                intent.putExtra("CURSO_DESC", curso.descripcion)
+                startActivity(intent)
+            },
+            onAplicarReglas = { curso ->
+                Toast.makeText(this, "¡Reglas de ${curso.nombre} aplicadas a la cámara!", Toast.LENGTH_SHORT).show()
+            },
+            onQuitarReglas = { curso ->
+                Toast.makeText(this, "Reglas quitadas. MiniEco volvió a la normalidad.", Toast.LENGTH_SHORT).show()
+            }
+        )
+        rvCursos.adapter = adapter
 
+        fabAgregar.setOnClickListener {
+            mostrarDialogoCrearCurso()
+        }
+    }
+
+    // --- LA MAGIA DEL REFRESH AUTOMÁTICO ---
+    override fun onResume() {
+        super.onResume()
+        // Cada vez que volvemos a esta pantalla (por ejemplo, después de eliminar un curso),
+        // recargamos la base de datos para que la lista visual se actualice sola.
+        cargarCursos()
+    }
+
+    private fun cargarCursos() {
         lifecycleScope.launch {
-            db.miniEcoDao().obtenerTodosLosCursos().collect { cursos ->
-                listaCursos = cursos
-                spinnerCursos.adapter = ArrayAdapter(this@GestionCursosActivity, android.R.layout.simple_spinner_dropdown_item, cursos.map { it.nombreCurso })
-            }
+            val listaCursos = database.miniEcoDao().obtenerTodosLosCursos()
+            adapter.actualizarLista(listaCursos)
+        }
+    }
+
+    private fun mostrarDialogoCrearCurso() {
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Nuevo Curso")
+
+        val layout = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(50, 40, 50, 10)
         }
 
-        btnCrearCurso.setOnClickListener {
-            val nombre = etNombreCurso.text.toString().trim()
-            if (nombre.isNotEmpty() && nombre.all { it.isLetter() || it.isWhitespace() }) {
-                lifecycleScope.launch {
-                    db.miniEcoDao().insertarCurso(Curso(nombreCurso = nombre))
-                    Toast.makeText(this@GestionCursosActivity, "Curso Creado", Toast.LENGTH_SHORT).show()
-                    etNombreCurso.text.clear()
-                }
-            } else {
-                Toast.makeText(this, "Solo letras para el curso", Toast.LENGTH_SHORT).show()
-            }
-        }
+        val inputNombre = EditText(this).apply { hint = "Nombre del curso (Max 10 caracteres)" }
+        val inputDescripcion = EditText(this).apply { hint = "Descripción (Max 30 palabras)" }
 
-        btnAgregarRegla.setOnClickListener {
-            if (listaCursos.isEmpty() || spinnerCursos.selectedItem == null) {
-                Toast.makeText(this, "Primero crea un curso", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            val desc = etDescripcion.text.toString().trim()
-            val palabras = desc.split("\\s+".toRegex()).filter { it.isNotEmpty() }
+        layout.addView(inputNombre)
+        layout.addView(inputDescripcion)
+        builder.setView(layout)
 
-            if (palabras.size > 30 || !desc.all { it.isLetter() || it.isWhitespace() || it in ".,;" }) {
-                Toast.makeText(this, "Descripción inválida (Máx 30 palabras)", Toast.LENGTH_SHORT).show()
+        builder.setPositiveButton("Guardar", null)
+        builder.setNegativeButton("Cancelar") { dialog, _ -> dialog.dismiss() }
+
+        val dialog = builder.create()
+        dialog.show()
+
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+            val nombre = inputNombre.text.toString().trim()
+            val descripcion = inputDescripcion.text.toString().trim()
+
+            if (nombre.isEmpty() || descripcion.isEmpty()) {
+                Toast.makeText(this, "Error: Por favor llena todos los campos", Toast.LENGTH_LONG).show()
                 return@setOnClickListener
             }
 
-            val cursoSeleccionado = listaCursos[spinnerCursos.selectedItemPosition]
-            val nuevaRegla = ReglaDesecho(
-                idCursoRelacion = cursoSeleccionado.idCurso,
-                desecho = spinnerDesechos.selectedItem.toString(),
-                colorTacho = spinnerColores.selectedItem.toString(),
-                descripcion = desc
-            )
+            val regexAlfanumerico = "^[a-zA-Z0-9 áéíóúÁÉÍÓÚñÑ]+$".toRegex()
+            if (nombre.length > 10 || !nombre.matches(regexAlfanumerico)) {
+                Toast.makeText(this, "Error: El nombre debe tener máx 10 caracteres y solo letras/números", Toast.LENGTH_LONG).show()
+                return@setOnClickListener
+            }
+
+            if (!descripcion.matches(regexAlfanumerico)) {
+                Toast.makeText(this, "Error: La descripción solo debe contener letras y números", Toast.LENGTH_LONG).show()
+                return@setOnClickListener
+            }
+
+            val numPalabras = descripcion.split("\\s+".toRegex()).size
+            if (numPalabras > 30) {
+                Toast.makeText(this, "Error: La descripción no puede tener más de 30 palabras", Toast.LENGTH_LONG).show()
+                return@setOnClickListener
+            }
+
+            val nuevoCurso = Curso(nombre = nombre, descripcion = descripcion)
 
             lifecycleScope.launch {
-                try {
-                    db.miniEcoDao().insertarRegla(nuevaRegla)
-                    Toast.makeText(this@GestionCursosActivity, "Regla añadida con éxito", Toast.LENGTH_SHORT).show()
-                    etDescripcion.text.clear()
-                } catch (e: SQLiteConstraintException) {
-                    Toast.makeText(this@GestionCursosActivity, "❌ Error: Ese desecho ya está configurado en este curso.", Toast.LENGTH_LONG).show()
-                }
+                database.miniEcoDao().insertarCurso(nuevoCurso)
+                Toast.makeText(this@GestionCursosActivity, "¡Curso creado con éxito!", Toast.LENGTH_SHORT).show()
+                dialog.dismiss()
+                cargarCursos() // Recargamos instantáneamente tras guardar
             }
         }
     }

@@ -6,10 +6,10 @@
     android:background="?attr/colorSurface">
 
     <TextView
-        android:id="@+id/tvTituloEstudiantes"
+        android:id="@+id/tvTituloReglas"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Estudiantes del Curso"
+        android:text="Reglas de Clasificación"
         android:textSize="24sp"
         android:textStyle="bold"
         android:textColor="?attr/colorOnSurface"
@@ -19,24 +19,24 @@
         app:layout_constraintEnd_toEndOf="parent" />
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvEstudiantes"
+        android:id="@+id/rvReglas"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginTop="16dp"
         android:paddingBottom="80dp"
         android:clipToPadding="false"
-        app:layout_constraintTop_toBottomOf="@id/tvTituloEstudiantes"
+        app:layout_constraintTop_toBottomOf="@id/tvTituloReglas"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabAgregarEstudiante"
+        android:id="@+id/fabAgregarRegla"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="24dp"
         android:src="@android:drawable/ic_input_add"
-        app:backgroundTint="#2196F3"
+        app:backgroundTint="#FF9800"
         app:tint="@android:color/white"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
