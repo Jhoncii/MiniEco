@@ -25,35 +25,57 @@
         android:textSize="16sp"
         android:textAlignment="center"
         android:textColor="?attr/colorOnSurfaceVariant"
-        android:layout_marginBottom="32dp"/>
+        android:layout_marginBottom="24dp"/>
+
+    <Button
+        android:id="@+id/btnModoPrueba"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:text="▶ INICIAR MODO PRUEBA"
+        android:textSize="18sp"
+        android:backgroundTint="#9C27B0"
+        android:layout_marginBottom="12dp"/>
+
+    <Button
+        android:id="@+id/btnVerReportes"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:text="📊 Ver Reportes del Curso"
+        android:backgroundTint="#2196F3"
+        android:layout_marginBottom="24dp"/>
 
     <Button
         android:id="@+id/btnGestionarReglas"
         android:layout_width="match_parent"
-        android:layout_height="60dp"
+        android:layout_height="50dp"
         android:text="Configurar Reglas (Desechos)"
-        android:layout_marginBottom="16dp"/>
+        android:layout_marginBottom="12dp"/>
 
     <Button
         android:id="@+id/btnGestionarEstudiantes"
         android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:text="Estudiantes y Reportes"
-        android:layout_marginBottom="32dp"/>
+        android:layout_height="50dp"
+        android:text="Estudiantes del Curso"
+        android:layout_marginBottom="24dp"/>
 
-    <Button
-        android:id="@+id/btnEditarCurso"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Editar Curso"
-        android:backgroundTint="#FF9800"
-        android:layout_marginBottom="16dp"/>
-
-    <Button
-        android:id="@+id/btnEliminarCurso"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Eliminar Curso"
-        android:backgroundTint="#F44336"/>
-
+        android:orientation="horizontal">
+        <Button
+            android:id="@+id/btnEditarCurso"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Editar"
+            android:backgroundTint="#FF9800"
+            android:layout_marginEnd="8dp"/>
+        <Button
+            android:id="@+id/btnEliminarCurso"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Eliminar"
+            android:backgroundTint="#F44336"/>
+    </LinearLayout>
 </LinearLayout>

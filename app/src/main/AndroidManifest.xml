@@ -49,6 +49,8 @@
 
         <activity android:name=".DetalleCursoActivity" />
         <activity android:name=".GestionReglasActivity" />
+        <activity android:name=".TestActivity" />
+        <activity android:name=".ReportesActivity" />
 
     </application>
 </manifest>

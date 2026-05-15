@@ -28,5 +28,5 @@ interface MiniEcoDao {
 
     // --- REPORTES ---
     @Insert suspend fun insertarReporte(reporte: ReporteTest)
-    @Query("SELECT * FROM reportes_test WHERE estudianteId = :estudianteId ORDER BY fecha DESC") suspend fun obtenerReportesPorEstudiante(estudianteId: Int): List<ReporteTest>
-}
+    @Query("SELECT * FROM reportes_test WHERE cursoId = :cursoId ORDER BY fecha DESC") suspend fun obtenerReportesPorCurso(cursoId: Int): List<ReporteTest>
+    @Query("SELECT * FROM reportes_test WHERE estudianteId = :estudianteId ORDER BY fecha DESC") suspend fun obtenerReportesPorEstudiante(estudianteId: Int): List<ReporteTest>}

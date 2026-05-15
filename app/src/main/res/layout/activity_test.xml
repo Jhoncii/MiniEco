@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000">
+
+    <androidx.camera.view.PreviewView
+        android:id="@+id/viewFinderTest"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:gravity="center_vertical"
+        android:background="#88000000"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/tvContadorPrueba"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Objeto 1 de 5"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <ImageButton
+            android:id="@+id/btnSalirTest"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:backgroundTint="#F44336"
+            app:tint="#FFFFFF" />
+    </LinearLayout>
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/tarjetaTest"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="8dp"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp"
+            android:gravity="center">
+
+            <LinearLayout
+                android:id="@+id/layoutFaseDesecho"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/tvNombreDesechoTest"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="🔍 Escaneando objeto..."
+                    android:textSize="22sp"
+                    android:textColor="#000000"
+                    android:textStyle="bold"/>
+
+                <ImageButton
+                    android:id="@+id/btnAudioDesechoTest"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@android:drawable/ic_lock_silent_mode_off"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    app:tint="#2196F3"
+                    android:visibility="gone"
+                    android:layout_marginEnd="8dp"/>
+
+                <ImageButton
+                    android:id="@+id/btnSiguienteFaseColor"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:src="@android:drawable/ic_media_next"
+                    android:backgroundTint="#2196F3"
+                    app:tint="#FFFFFF"
+                    android:visibility="gone"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/layoutFaseColor"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="¿A qué tacho va?"
+                    android:textSize="18sp"
+                    android:textAlignment="center"
+                    android:layout_marginBottom="12dp"
+                    android:textStyle="bold"/>
+
+                <Button
+                    android:id="@+id/btnUsarCamaraColor"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="📷 Escanear color del Tacho"
+                    android:backgroundTint="#4CAF50"
+                    android:layout_marginBottom="12dp"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="O elige manualmente:"
+                    android:textAlignment="center"
+                    android:layout_marginBottom="8dp"/>
+
+                <GridLayout
+                    android:id="@+id/gridColoresManuales"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:columnCount="2"
+                    android:alignmentMode="alignBounds"
+                    android:useDefaultMargins="true"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/layoutConfirmarColor"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Color detectado:"
+                    android:textSize="16sp"/>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginVertical="12dp">
+
+                    <TextView
+                        android:id="@+id/tvColorConfirmar"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ROJO"
+                        android:textSize="26sp"
+                        android:textStyle="bold"/>
+
+                    <ImageButton
+                        android:id="@+id/btnAudioColorConfirmar"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:src="@android:drawable/ic_lock_silent_mode_off"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        app:tint="#2196F3"
+                        android:layout_marginStart="8dp"/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center">
+
+                    <ImageButton
+                        android:id="@+id/btnRechazarColor"
+                        android:layout_width="60dp"
+                        android:layout_height="60dp"
+                        android:src="@android:drawable/ic_menu_close_clear_cancel"
+                        android:backgroundTint="#F44336"
+                        app:tint="#FFFFFF"
+                        android:layout_marginEnd="24dp"/>
+
+                    <ImageButton
+                        android:id="@+id/btnAceptarColor"
+                        android:layout_width="60dp"
+                        android:layout_height="60dp"
+                        android:src="@android:drawable/checkbox_on_background"
+                        android:backgroundTint="#4CAF50"
+                        app:tint="#FFFFFF"/>
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/layoutFaseResultado"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/tvResultadoEvaluacion"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="✅ ¡Correcto!"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:textAlignment="center"
+                    android:layout_marginBottom="16dp"/>
+
+                <Button
+                    android:id="@+id/btnAceptarResultado"
+                    android:layout_width="match_parent"
+                    android:layout_height="60dp"
+                    android:text="Siguiente Pregunta ➡"
+                    android:backgroundTint="#2196F3"
+                    android:textSize="18sp"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/layoutFaseFinal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🎉 Prueba Finalizada 🎉"
+                    android:textSize="26sp"
+                    android:textStyle="bold"
+                    android:textColor="#4CAF50"
+                    android:layout_marginBottom="8dp"/>
+
+                <TextView
+                    android:id="@+id/tvNotaFinal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Nota: 7/10"
+                    android:textSize="32sp"
+                    android:textStyle="bold"
+                    android:textColor="#000000"
+                    android:layout_marginBottom="24dp"/>
+
+                <Button
+                    android:id="@+id/btnSalirMenu"
+                    android:layout_width="match_parent"
+                    android:layout_height="60dp"
+                    android:text="Guardar y Salir al Menú"
+                    android:backgroundTint="#9C27B0"
+                    android:textSize="18sp"/>
+            </LinearLayout>
+
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+</androidx.constraintlayout.widget.ConstraintLayout>

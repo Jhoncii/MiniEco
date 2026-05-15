@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 
 @Database(
     entities = [Curso::class, Estudiante::class, Regla::class, ReporteTest::class],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class MiniEcoDatabase : RoomDatabase() {

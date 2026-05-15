@@ -20,8 +20,8 @@ class LoginActivity : AppCompatActivity() {
         val sharedPref = getSharedPreferences("MiniEcoPrefs", Context.MODE_PRIVATE)
 
         btnIngresar.setOnClickListener {
-            val userIngresado = etUsuario.text.toString().trim()
-            val passIngresado = etPassword.text.toString().trim()
+            val userIngresado = etUsuario.text.toString()
+            val passIngresado = etPassword.text.toString()
             val prefs = getSharedPreferences("MiniEcoPrefs", Context.MODE_PRIVATE)
 
             // Datos actuales en memoria (o los de fábrica la primera vez)
