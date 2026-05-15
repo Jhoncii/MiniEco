@@ -21,8 +21,7 @@ class AdminPanelActivity : AppCompatActivity() {
         }
 
         btnCambiarPass.setOnClickListener {
-            // En la siguiente fase programamos la ventanita de pedir contraseña antigua
-            Toast.makeText(this, "Pronto: Cambiar contraseña", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, CambiarPasswordActivity::class.java))
         }
 
 

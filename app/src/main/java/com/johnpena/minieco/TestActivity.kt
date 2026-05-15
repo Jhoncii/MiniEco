@@ -329,19 +329,69 @@ class TestActivity : AppCompatActivity() {
             "Amarillo" to "#FFEB3B", "Verde" to "#4CAF50", "Negro" to "#212121",
             "Blanco" to "#F5F5F5", "Donación" to "#9C27B0"
         )
+
         for ((nombre, hex) in coloresMap) {
-            val btn = Button(this).apply {
-                text = nombre
-                setBackgroundColor(Color.parseColor(hex))
-                setTextColor(if (nombre == "Blanco" || nombre == "Amarillo") Color.BLACK else Color.WHITE)
+            // 1. EL FONDO (Tarjeta para que se vea bonito)
+            val card = androidx.cardview.widget.CardView(this).apply {
+                setCardBackgroundColor(Color.parseColor(hex))
+                radius = 12f
+                cardElevation = 4f
                 layoutParams = GridLayout.LayoutParams().apply {
                     width = 0; height = GridLayout.LayoutParams.WRAP_CONTENT
                     columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f)
-                    setMargins(8, 8, 8, 8)
+                    setMargins(12, 12, 12, 12)
                 }
+            }
+
+            // 2. EL CONTENEDOR INTERNO (Horizontal)
+            val innerLayout = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = android.view.Gravity.CENTER_VERTICAL
+            }
+
+            val colorTexto = if (nombre == "Blanco" || nombre == "Amarillo") Color.BLACK else Color.WHITE
+
+            // 3. LA BOCINA (Exclusiva para el audio)
+            val btnAudio = ImageButton(this).apply {
+                setImageResource(android.R.drawable.ic_lock_silent_mode_off)
+                setBackgroundColor(Color.TRANSPARENT)
+                setColorFilter(colorTexto)
+                layoutParams = LinearLayout.LayoutParams(120, 120) // Tamaño cuadrado táctil
+
+                // ¡AQUÍ ESTÁ LA MAGIA! Solo suena, NO avanza.
+                setOnClickListener {
+                    val audioRes = obtenerAudioColor(nombre)
+                    if (audioRes != 0) {
+                        android.media.MediaPlayer.create(this@TestActivity, audioRes)?.apply {
+                            setOnCompletionListener { release() }
+                            start()
+                        }
+                    }
+                }
+            }
+
+            // 4. EL TEXTO (Exclusivo para evaluar)
+            val tvNombre = TextView(this).apply {
+                text = nombre
+                setTextColor(colorTexto)
+                textSize = 18f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                gravity = android.view.Gravity.CENTER
+                setPadding(0, 30, 20, 30) // Espaciado para que se vea como botón
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+
+                // ¡AQUÍ SÍ AVANZA!
                 setOnClickListener { evaluarRespuesta(nombre) }
             }
-            gridColores.addView(btn)
+
+            // Unimos todo el rompecabezas
+            innerLayout.addView(btnAudio)
+            innerLayout.addView(tvNombre)
+            card.addView(innerLayout)
+
+            card.setOnClickListener { evaluarRespuesta(nombre) }
+
+            gridColores.addView(card)
         }
     }
 

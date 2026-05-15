@@ -39,11 +39,14 @@ class ReportesActivity : AppCompatActivity() {
     private var estudianteFiltro: String = "Todos"
     private val formatoFecha = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
 
+    private var estudiantePreFiltro: String? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_reportes)
 
         cursoId = intent.getIntExtra("CURSO_ID", -1)
+        estudiantePreFiltro = intent.getStringExtra("ESTUDIANTE_FILTRO")
         database = MiniEcoDatabase.getDatabase(this)
 
         rvReportes = findViewById(R.id.rvReportes)
@@ -89,14 +92,22 @@ class ReportesActivity : AppCompatActivity() {
 
     private fun cargarReportes(spinner: Spinner) {
         lifecycleScope.launch {
-            // Ya vienen ordenados por fecha desde la Base de Datos (del más nuevo al más viejo)
             listaOriginal = database.miniEcoDao().obtenerReportesPorCurso(cursoId)
 
-            // Llenar el Spinner de estudiantes únicos
-            val nombresUnicos = mutableListOf("Todos")
-            nombresUnicos.addAll(listaOriginal.map { it.nombreEstudiante }.distinct())
-            spinner.adapter = ArrayAdapter(this@ReportesActivity, android.R.layout.simple_spinner_dropdown_item, nombresUnicos)
-
+            if (estudiantePreFiltro != null) {
+                // SI VENIMOS DIRECTO DEL ESTUDIANTE: Ocultamos el Spinner y fijamos el filtro
+                spinner.visibility = View.GONE
+                estudianteFiltro = estudiantePreFiltro!!
+                findViewById<TextView>(R.id.tvTituloReportes).text = "Reportes de $estudianteFiltro" // Opcional, si le pones ID a tu título
+            } else {
+                // SI VENIMOS DEL MENÚ GENERAL: Llenamos el Spinner normal
+                spinner.visibility = View.VISIBLE
+                val nombresUnicos = mutableListOf("Todos")
+                nombresUnicos.addAll(listaOriginal.map { it.nombreEstudiante }.distinct())
+                spinner.adapter = ArrayAdapter(this@ReportesActivity, android.R.layout.simple_spinner_item, nombresUnicos).apply {
+                    setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                }
+            }
             aplicarFiltros()
         }
     }

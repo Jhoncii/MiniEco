@@ -13,7 +13,8 @@ class EstudianteAdapter(
     private var estudiantes: List<Estudiante>,
     private val onEditClick: (Estudiante) -> Unit,
     private val onDeleteClick: (Estudiante) -> Unit,
-    private val onTestClick: (Estudiante) -> Unit
+    private val onTestClick: (Estudiante) -> Unit,
+    private val onCardClick: (Estudiante) -> Unit
 ) : RecyclerView.Adapter<EstudianteAdapter.EstudianteViewHolder>() {
 
     inner class EstudianteViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -35,6 +36,7 @@ class EstudianteAdapter(
         holder.btnEditar.setOnClickListener { onEditClick(estudiante) }
         holder.btnEliminar.setOnClickListener { onDeleteClick(estudiante) }
         holder.btnTest.setOnClickListener { onTestClick(estudiante) }
+        holder.itemView.setOnClickListener { onCardClick(estudiante) }
     }
 
     override fun getItemCount() = estudiantes.size

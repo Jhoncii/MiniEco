@@ -51,6 +51,7 @@
         <activity android:name=".GestionReglasActivity" />
         <activity android:name=".TestActivity" />
         <activity android:name=".ReportesActivity" />
+        <activity android:name=".CambiarPasswordActivity" />
 
     </application>
 </manifest>

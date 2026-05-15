@@ -1,5 +1,6 @@
 package com.johnpena.minieco
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.EditText
 import android.widget.Toast
@@ -32,6 +33,7 @@ class GestionEstudiantesActivity : AppCompatActivity() {
         rvEstudiantes = findViewById(R.id.rvEstudiantes)
         rvEstudiantes.layoutManager = LinearLayoutManager(this)
 
+        // --- AQUÍ ESTÁ EL ADAPTER CON EL CLIC DE LOS REPORTES ---
         adapter = EstudianteAdapter(
             estudiantes = emptyList(),
             onEditClick = { estudiante -> mostrarDialogoEstudiante(estudiante) },
@@ -49,7 +51,14 @@ class GestionEstudiantesActivity : AppCompatActivity() {
                     .show()
             },
             onTestClick = { estudiante ->
-                Toast.makeText(this, "Siguiente Fase: Abrir Test para ${estudiante.nombre}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "El test se inicia desde el Menú del Curso.", Toast.LENGTH_SHORT).show()
+            },
+            onCardClick = { estudiante ->
+                // ESTA LÍNEA ABRE LOS REPORTES Y LOS FILTRA POR ESTE ESTUDIANTE
+                val intent = Intent(this, ReportesActivity::class.java)
+                intent.putExtra("CURSO_ID", cursoId)
+                intent.putExtra("ESTUDIANTE_FILTRO", "${estudiante.nombre} ${estudiante.apellido}")
+                startActivity(intent)
             }
         )
         rvEstudiantes.adapter = adapter
@@ -132,7 +141,7 @@ class GestionEstudiantesActivity : AppCompatActivity() {
                     Toast.makeText(this@GestionEstudiantesActivity, "Estudiante actualizado", Toast.LENGTH_SHORT).show()
                 }
                 dialog.dismiss()
-                cargarEstudiantes()
+                cargarEstudiantes() // Recargamos para que aparezca en la lista al instante
             }
         }
     }
