@@ -38,7 +38,7 @@ class ConfigurarPerfilActivity : AppCompatActivity() {
                 // Saltamos al Panel de Administración
                 val intent = Intent(this, AdminPanelActivity::class.java)
                 startActivity(intent)
-                finish() // Cerramos esta pantalla para que no pueda volver atrás
+                finish()
             } else {
                 Toast.makeText(this, "⚠️ Por favor, llena ambos campos", Toast.LENGTH_SHORT).show()
             }

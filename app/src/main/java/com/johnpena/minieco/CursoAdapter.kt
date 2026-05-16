@@ -17,7 +17,7 @@ class CursoAdapter(
     private val onQuitarReglas: (Curso) -> Unit
 ) : RecyclerView.Adapter<CursoAdapter.CursoViewHolder>() {
 
-    // Leemos qué curso está activo actualmente en la memoria del teléfono
+
     private val prefs = context.getSharedPreferences("MiniEcoPrefs", Context.MODE_PRIVATE)
     private var cursoActivoId = prefs.getInt("cursoActivoId", -1)
 
@@ -38,7 +38,7 @@ class CursoAdapter(
         holder.tvNombre.text = curso.nombre
         holder.tvDesc.text = curso.descripcion
 
-        // Lógica de los botones Verde y Rojo
+
         if (curso.id == cursoActivoId) {
             holder.btnAplicar.visibility = View.GONE
             holder.btnQuitar.visibility = View.VISIBLE
@@ -47,29 +47,29 @@ class CursoAdapter(
             holder.btnQuitar.visibility = View.GONE
         }
 
-        // Si tocan la tarjeta (entrar a ver estudiantes y reglas)
+
         holder.itemView.setOnClickListener { onCursoClick(curso) }
 
-        // Botón Verde (Aplicar)
+
         holder.btnAplicar.setOnClickListener {
             cursoActivoId = curso.id
             prefs.edit().putInt("cursoActivoId", curso.id).apply()
-            notifyDataSetChanged() // Actualiza la lista para cambiar los botones
+            notifyDataSetChanged()
             onAplicarReglas(curso)
         }
 
-        // Botón Rojo (Quitar)
+
         holder.btnQuitar.setOnClickListener {
             cursoActivoId = -1
             prefs.edit().remove("cursoActivoId").apply()
-            notifyDataSetChanged() // Actualiza la lista
+            notifyDataSetChanged()
             onQuitarReglas(curso)
         }
     }
 
     override fun getItemCount() = cursos.size
 
-    // Función para recargar la lista cuando creas o borras un curso
+
     fun actualizarLista(nuevaLista: List<Curso>) {
         cursos = nuevaLista
         notifyDataSetChanged()

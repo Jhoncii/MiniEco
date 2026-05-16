@@ -15,7 +15,7 @@ import androidx.room.PrimaryKey
             onDelete = ForeignKey.CASCADE
         )
     ],
-    // Esto asegura que "Vidrio" solo pueda tener una regla por curso
+    // Solo pueda tener una regla por curso
     indices = [Index(value = ["cursoId", "tipoDesecho"], unique = true)]
 )
 data class Regla(

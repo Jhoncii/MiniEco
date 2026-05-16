@@ -341,7 +341,6 @@ class MainActivity : AppCompatActivity() {
 
             viewFinder.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
 
-            // LA MAGIA: Procesa y adapta la interfaz según modo profesor o normal
             procesarDesechoEnUI(materialBruto, txtMaterial, txtConsejo, tarjetaResultadosVivo, true)
         }
     }
@@ -361,9 +360,7 @@ class MainActivity : AppCompatActivity() {
         procesarDesechoEnUI(materialBruto, txtResultadoFoto, null, tarjetaResultadoFoto, false)
     }
 
-    // =======================================================================
-    // CEREBRO DE CLASIFICACIÓN (Integra IA con Reglas o Defecto)
-    // =======================================================================
+    // Funcion para determinar el demo o con reglas del curso.
     private fun procesarDesechoEnUI(materialBruto: String, txtTitulo: TextView, txtSubtitulo: TextView?, tarjeta: CardView, esVivo: Boolean) {
         val desechoLimpio = normalizarNombreDesecho(materialBruto)
         val audioDesecho = obtenerAudioDesecho(desechoLimpio)
@@ -376,7 +373,7 @@ class MainActivity : AppCompatActivity() {
         restablecerAnimaciones(tarjeta)
 
         if (cursoActivoId != -1 && reglasActivas.isNotEmpty()) {
-            // MODO PROFESORA
+            // Modo Profe
             val regla = reglasActivas.find { it.tipoDesecho.equals(desechoLimpio, ignoreCase = true) }
             if (regla != null) {
                 val colorProfe = regla.colorTacho
@@ -392,7 +389,7 @@ class MainActivity : AppCompatActivity() {
                 textoConsejo = "Este desecho no se evalúa hoy."
             }
         } else {
-            // MODO NORMAL (Minieco Original)
+            // Modo normal Original
             val colorDefecto = obtenerColorPorDefecto(desechoLimpio)
             val config = obtenerConfigColor(colorDefecto)
             colorFondoHex = config.fondoHex
@@ -435,7 +432,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // --- NORMALIZAR LO QUE DICE LA IA A LOS 10 EXACTOS ---
+    // Los 10 desechos exactos
     private fun normalizarNombreDesecho(iaOutput: String): String {
         return when (iaOutput.lowercase().trim()) {
             "battery", "bateria", "batería", "baterías" -> "Batería"
@@ -451,7 +448,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // --- MAPEO EXACTO A LOS 8 COLORES PERMITIDOS ---
+    // Los colores por defecto
     private fun obtenerConfigColor(colorTacho: String): ConfigColor {
         return when (colorTacho.lowercase().trim()) {
             "rojo" -> ConfigColor(Color.parseColor("#FFCDD2"), R.raw.rojo)
@@ -466,7 +463,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // --- POR DEFECTO PARA MODO NORMAL ---
+
     private fun obtenerColorPorDefecto(desecho: String): String {
         return when (desecho) {
             "Batería" -> "Rojo"
@@ -508,7 +505,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // --- ANIMACIONES ORIGINALES CONSERVADAS ---
+    // Animaciones
     private fun animarTarjeta(colorTacho: String, tarjeta: CardView) {
         when (colorTacho.lowercase().trim()) {
             "rojo", "negro" -> tarjeta.animate().translationX(15f).setDuration(80).withEndAction { tarjeta.animate().translationX(-15f).setDuration(80).withEndAction { tarjeta.animate().translationX(0f).setDuration(80).start() }.start() }.start()

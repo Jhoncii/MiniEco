@@ -53,7 +53,7 @@ class TestActivity : AppCompatActivity() {
     private lateinit var btnUsarCamaraColor: Button
     private lateinit var gridColores: GridLayout
 
-    // Fase 2.5 Confirmar Color
+    // Fase 2.5
     private lateinit var layoutConfirmarColor: LinearLayout
     private lateinit var tvColorConfirmar: TextView
     private lateinit var btnAudioColorConfirmar: ImageButton
@@ -260,14 +260,14 @@ class TestActivity : AppCompatActivity() {
         }, ContextCompat.getMainExecutor(this))
     }
 
-    // --- CEREBRO: FASE 0 ---
+    // Cerebro fase 0
     private fun procesarDesechoVivo(materialBruto: String) {
         if (materialBruto == "Buscando" || materialBruto == "Inseguro") return
 
         val desechoLimpio = normalizarNombreDesecho(materialBruto)
 
         if (usarReglasDefecto) {
-            // MODO POR DEFECTO
+            // Por defecto si no hay reglas en el curso
             tvNombreDesecho.text = "¡Es $desechoLimpio!"
             tarjetaTest.setCardBackgroundColor(Color.WHITE)
             tvNombreDesecho.setTextColor(Color.BLACK)
@@ -277,7 +277,7 @@ class TestActivity : AppCompatActivity() {
             colorCorrectoFijado = obtenerColorPorDefecto(desechoLimpio)
 
         } else {
-            // MODO PROFESORA ESTRICTO
+            // Modo con Reglas
             val regla = reglasActivas.find { it.tipoDesecho.equals(desechoLimpio, ignoreCase = true) }
             if (regla != null) {
                 tvNombreDesecho.text = "¡Es $desechoLimpio!"
@@ -298,7 +298,7 @@ class TestActivity : AppCompatActivity() {
         }
     }
 
-    // --- CEREBRO: FASE 2.5 (PALETTE) ---
+    // Cerebro Fase 2.5
     private fun escanearColorConPalette(bitmap: Bitmap) {
         Palette.from(bitmap).generate { palette ->
             val dominantSwatch = palette?.dominantSwatch ?: palette?.vibrantSwatch
@@ -314,7 +314,7 @@ class TestActivity : AppCompatActivity() {
                     layoutConfirmarColor.visibility = View.VISIBLE
                     tvColorConfirmar.text = nombreColor.uppercase()
 
-                    // Pintamos el fondo según el color detectado para que sea más visual
+                    // Color del fondo deacuerdo a lo que detecto
                     val configHex = obtenerHexColor(nombreColor)
                     tarjetaTest.setCardBackgroundColor(Color.parseColor(configHex))
                 }
@@ -331,7 +331,7 @@ class TestActivity : AppCompatActivity() {
         )
 
         for ((nombre, hex) in coloresMap) {
-            // 1. EL FONDO (Tarjeta para que se vea bonito)
+            // 1. El Fondo de la Tarjeta
             val card = androidx.cardview.widget.CardView(this).apply {
                 setCardBackgroundColor(Color.parseColor(hex))
                 radius = 12f
@@ -343,7 +343,7 @@ class TestActivity : AppCompatActivity() {
                 }
             }
 
-            // 2. EL CONTENEDOR INTERNO (Horizontal)
+            // 2. El contenedor interno horizontasl
             val innerLayout = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = android.view.Gravity.CENTER_VERTICAL
@@ -351,14 +351,14 @@ class TestActivity : AppCompatActivity() {
 
             val colorTexto = if (nombre == "Blanco" || nombre == "Amarillo") Color.BLACK else Color.WHITE
 
-            // 3. LA BOCINA (Exclusiva para el audio)
+            // 3. Icono de Bocina
             val btnAudio = ImageButton(this).apply {
                 setImageResource(android.R.drawable.ic_lock_silent_mode_off)
                 setBackgroundColor(Color.TRANSPARENT)
                 setColorFilter(colorTexto)
                 layoutParams = LinearLayout.LayoutParams(120, 120) // Tamaño cuadrado táctil
 
-                // ¡AQUÍ ESTÁ LA MAGIA! Solo suena, NO avanza.
+                // Solo sonido, no avanza
                 setOnClickListener {
                     val audioRes = obtenerAudioColor(nombre)
                     if (audioRes != 0) {
@@ -380,7 +380,7 @@ class TestActivity : AppCompatActivity() {
                 setPadding(0, 30, 20, 30) // Espaciado para que se vea como botón
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
 
-                // ¡AQUÍ SÍ AVANZA!
+                // avanza
                 setOnClickListener { evaluarRespuesta(nombre) }
             }
 
@@ -389,13 +389,14 @@ class TestActivity : AppCompatActivity() {
             innerLayout.addView(tvNombre)
             card.addView(innerLayout)
 
+            // Si el niño presiona el fondo vacío de la tarjeta (no la bocina), también evalúa
             card.setOnClickListener { evaluarRespuesta(nombre) }
 
             gridColores.addView(card)
         }
     }
 
-    // --- FASE 3: EVALUAR ---
+    //FASE 3: EVALUAR
     private fun evaluarRespuesta(colorSeleccionado: String) {
         faseActual = 3
         layoutFaseColor.visibility = View.GONE
@@ -454,7 +455,7 @@ class TestActivity : AppCompatActivity() {
         }
     }
 
-    // --- UTILIDADES ---
+    //UTILIDADES
     private fun normalizarNombreDesecho(iaOutput: String): String {
         return when (iaOutput.lowercase().trim()) {
             "battery", "bateria", "batería", "baterías" -> "Batería"

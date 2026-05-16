@@ -14,7 +14,7 @@ object AudioPlayerHelper {
         mediaPlayerDesecho = MediaPlayer.create(context, audioDesechoId)
         mediaPlayerColor = MediaPlayer.create(context, audioColorId)
 
-        // Cuando termine el audio del desecho, arranca el del color
+
         mediaPlayerDesecho?.setOnCompletionListener {
             mediaPlayerColor?.start()
             it.release() // Liberar memoria

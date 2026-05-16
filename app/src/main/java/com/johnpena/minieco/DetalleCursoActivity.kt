@@ -106,24 +106,36 @@ class DetalleCursoActivity : AppCompatActivity() {
             setPadding(50, 40, 50, 10)
         }
 
-        // 1. Elegir Estudiante
-        val spinnerEstudiante = Spinner(this)
-        val nombresEstudiantes = listaEstudiantesCache.map { "${it.nombre} ${it.apellido}" }
-        spinnerEstudiante.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, nombresEstudiantes)
+        // REEMPLAZO POR AUTOCOMPLETE BUSCADOR
+        val inputBuscadorEstudiante = android.widget.AutoCompleteTextView(this).apply {
+            hint = "Escribe Apellido o Cédula para buscar..."
+            threshold = 1 // Empieza a buscar desde la primera letra
+        }
 
-        // 2. Elegir Cantidad de Desechos (1 al 10)
+        // Mapeamos los datos para el buscador
+        val listaFormateada = listaEstudiantesCache.map {
+            "${it.apellido.uppercase()} ${it.nombre.uppercase()} \n(CI: ${it.cedula})"
+        }
+        val adaptadorBuscador = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, listaFormateada)
+        inputBuscadorEstudiante.setAdapter(adaptadorBuscador)
+
+        var estudianteSeleccionadoIndex = -1
+        inputBuscadorEstudiante.setOnItemClickListener { _, _, position, _ ->
+            val textoSeleccionado = adaptadorBuscador.getItem(position)
+            estudianteSeleccionadoIndex = listaFormateada.indexOf(textoSeleccionado)
+        }
+
         val spinnerCantidad = Spinner(this)
         val opcionesCantidad = (1..10).map { "$it Desechos" }
         spinnerCantidad.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, opcionesCantidad)
 
-        // 3. Contraseña de seguridad
         val inputPassword = EditText(this).apply {
             hint = "Contraseña de la profesora"
             inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
         }
 
-        layout.addView(android.widget.TextView(this).apply { text = "Selecciona el Estudiante:" })
-        layout.addView(spinnerEstudiante)
+        layout.addView(android.widget.TextView(this).apply { text = "Buscar Estudiante (Filtro Dinámico):" })
+        layout.addView(inputBuscadorEstudiante)
         layout.addView(android.widget.TextView(this).apply { text = "Cantidad de objetos a evaluar:"; setPadding(0, 30, 0, 0) })
         layout.addView(spinnerCantidad)
         layout.addView(android.widget.TextView(this).apply { text = "Seguridad:"; setPadding(0, 30, 0, 0) })
@@ -138,25 +150,28 @@ class DetalleCursoActivity : AppCompatActivity() {
 
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
             val passIngresada = inputPassword.text.toString()
-            val prefs = getSharedPreferences("MiniEcoPrefs", Context.MODE_PRIVATE)
-            val passReal = prefs.getString("admin_pass", "basura")
+            val passReal = getSharedPreferences("MiniEcoPrefs", Context.MODE_PRIVATE).getString("admin_pass", "basura")
 
             if (passIngresada != passReal) {
                 Toast.makeText(this, "❌ Contraseña incorrecta", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            val estudianteSeleccionado = listaEstudiantesCache[spinnerEstudiante.selectedItemPosition]
-            val cantidadSeleccionada = spinnerCantidad.selectedItemPosition + 1 // +1 porque el índice empieza en 0
+            if (estudianteSeleccionadoIndex == -1) {
+                Toast.makeText(this, "❌ Selecciona un estudiante válido de la lista desplegable", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
 
-            Toast.makeText(this, "¡Preparando Test de $cantidadSeleccionada preguntas para ${estudianteSeleccionado.nombre}!", Toast.LENGTH_LONG).show()
+            val estudianteSeleccionado = listaEstudiantesCache[estudianteSeleccionadoIndex]
+            val cantidadSeleccionada = spinnerCantidad.selectedItemPosition + 1
+
             dialog.dismiss()
 
-            // AQUÍ LLAMAREMOS AL TestActivity
             val intent = Intent(this, TestActivity::class.java)
             intent.putExtra("CURSO_ID", cursoId)
             intent.putExtra("ESTUDIANTE_ID", estudianteSeleccionado.id)
-            intent.putExtra("NOMBRE_ESTUDIANTE", "${estudianteSeleccionado.nombre} ${estudianteSeleccionado.apellido}")
+            // Mandamos Apellidos Nombres + CI
+            intent.putExtra("NOMBRE_ESTUDIANTE", "${estudianteSeleccionado.apellido.uppercase()} ${estudianteSeleccionado.nombre.uppercase()} (CI: ${estudianteSeleccionado.cedula})")
             intent.putExtra("TOTAL_PREGUNTAS", cantidadSeleccionada)
             startActivity(intent)
         }

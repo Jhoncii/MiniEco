@@ -3,7 +3,6 @@ package com.johnpena.minieco
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
@@ -19,9 +18,9 @@ class EstudianteAdapter(
 
     inner class EstudianteViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val tvNombre: TextView = itemView.findViewById(R.id.tvNombreCompletoEstudiante)
+        val tvCedula: TextView = itemView.findViewById(R.id.tvCedulaEstudiante)
         val btnEditar: ImageButton = itemView.findViewById(R.id.btnEditarEstudiante)
         val btnEliminar: ImageButton = itemView.findViewById(R.id.btnEliminarEstudiante)
-        val btnTest: Button = itemView.findViewById(R.id.btnHacerTest)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): EstudianteViewHolder {
@@ -31,11 +30,13 @@ class EstudianteAdapter(
 
     override fun onBindViewHolder(holder: EstudianteViewHolder, position: Int) {
         val estudiante = estudiantes[position]
-        holder.tvNombre.text = "${estudiante.nombre} ${estudiante.apellido}"
+
+        // Formato pedido: APELLIDOS NOMBRES
+        holder.tvNombre.text = "${estudiante.apellido.uppercase()} ${validaNombre(estudiante.nombre)}"
+        holder.tvCedula.text = "CI: ${estudiante.cedula}"
 
         holder.btnEditar.setOnClickListener { onEditClick(estudiante) }
         holder.btnEliminar.setOnClickListener { onDeleteClick(estudiante) }
-        holder.btnTest.setOnClickListener { onTestClick(estudiante) }
         holder.itemView.setOnClickListener { onCardClick(estudiante) }
     }
 
@@ -44,5 +45,9 @@ class EstudianteAdapter(
     fun actualizarLista(nuevaLista: List<Estudiante>) {
         estudiantes = nuevaLista
         notifyDataSetChanged()
+    }
+
+    private fun validaNombre(s: String): String {
+        return s.split(" ").joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
     }
 }

@@ -19,5 +19,6 @@ data class Estudiante(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val cursoId: Int,
     val nombre: String,
-    val apellido: String
+    val apellido: String,
+    val cedula: String
 )

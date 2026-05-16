@@ -14,14 +14,14 @@ class WasteClassifier(context: Context) {
     private var interpreter: Interpreter
     private var labels: List<String>
 
-    // TAMAÑO EXACTO DEL MODELO FINAL (384x384)
+    // Pixeles del modelo
     private val IMAGE_SIZE = 384
 
     init {
         // Cargar etiquetas en español
         labels = context.assets.open("etiquetas.txt").bufferedReader().readLines()
 
-        // Cargar el modelo nuevo
+        // Cargar el modelo
         val fileDescriptor = context.assets.openFd("garbage_classification_android.tflite")
         val inputStream = FileInputStream(fileDescriptor.fileDescriptor)
         val fileChannel = inputStream.channel
@@ -31,7 +31,7 @@ class WasteClassifier(context: Context) {
 
         interpreter = Interpreter(modelBuffer)
 
-        // --- LA MAGIA PARA ARREGLAR EL ERROR DE LOS 12 BYTES ---
+        //PARA ARREGLAR EL ERROR DE LOS 12 BYTES
         // Obligamos al modelo a "abrir los ojos" al tamaño correcto (384x384)
         interpreter.resizeInput(0, intArrayOf(1, IMAGE_SIZE, IMAGE_SIZE, 3))
         interpreter.allocateTensors()
@@ -56,7 +56,7 @@ class WasteClassifier(context: Context) {
             val intValues = IntArray(IMAGE_SIZE * IMAGE_SIZE)
             resizedBitmap.getPixels(intValues, 0, IMAGE_SIZE, 0, 0, IMAGE_SIZE, IMAGE_SIZE)
 
-// 5. Normalización Cruda (¡El secreto para EfficientNetV2!)
+// 5. Normalización Cruda
             var pixel = 0
             for (i in 0 until IMAGE_SIZE) {
                 for (j in 0 until IMAGE_SIZE) {
@@ -66,7 +66,7 @@ class WasteClassifier(context: Context) {
                     val g = ((valPixel shr 8) and 0xFF).toFloat()
                     val b = (valPixel and 0xFF).toFloat()
 
-                    // Enviamos los colores puros, sin divisiones
+
                     byteBuffer.putFloat(r)
                     byteBuffer.putFloat(g)
                     byteBuffer.putFloat(b)
@@ -89,7 +89,7 @@ class WasteClassifier(context: Context) {
 
             android.util.Log.d("IA_MINIECO", "Detectado: ${labels[maxIndex]} con ${(maxProb * 100).toInt()}%")
 
-            // 8. LA REGLA DEL UMBRAL: Si duda (menos del 75%), es "Inseguro"
+            // 8. Solo paso si esta seguro en un 75 porciento o mayor
             if (maxProb < 0.75f) {
                 return "Inseguro"
             }
@@ -97,7 +97,7 @@ class WasteClassifier(context: Context) {
             return labels[maxIndex]
 
         } catch (e: Exception) {
-            // SI ALGO EXPLOTA, LO ATRAPAMOS AQUÍ Y LA APP NO SE CIERRA
+            // Si algo falla que no se cierre la app.
             android.util.Log.e("IA_MINIECO_ERROR", "Error atrapado: ${e.message}")
             return "Inseguro"
         }

@@ -45,10 +45,10 @@ class CambiarPasswordActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            // ¡TODO PERFECTO! Guardamos en memoria
+
             prefs.edit().putString("admin_pass", passNueva).apply()
             Toast.makeText(this, "✅ Contraseña actualizada con éxito", Toast.LENGTH_SHORT).show()
-            finish() // Cierra la pantalla
+            finish()
         }
     }
 }

@@ -24,13 +24,13 @@ class LoginActivity : AppCompatActivity() {
             val passIngresado = etPassword.text.toString()
             val prefs = getSharedPreferences("MiniEcoPrefs", Context.MODE_PRIVATE)
 
-            // Datos actuales en memoria (o los de fábrica la primera vez)
+
             val adminUser = prefs.getString("admin_user", "clasificacion")
             val adminPass = prefs.getString("admin_pass", "basura")
             val esPrimeraVez = prefs.getBoolean("is_first_login", true)
 
             if (userIngresado == adminUser && passIngresado == adminPass) {
-                // Marcamos que ya entró al sistema
+
                 prefs.edit().putBoolean("is_logged_in", true).apply()
 
                 if (esPrimeraVez) {

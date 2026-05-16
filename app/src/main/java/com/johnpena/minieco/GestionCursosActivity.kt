@@ -30,7 +30,7 @@ class GestionCursosActivity : AppCompatActivity() {
 
         val fabAgregar = findViewById<FloatingActionButton>(R.id.fabAgregarCurso)
 
-        // Inicializamos el Adapter que controla las tarjetas
+        // Inicializamos el Adapter
         adapter = CursoAdapter(
             cursos = emptyList(),
             context = this,
@@ -54,12 +54,8 @@ class GestionCursosActivity : AppCompatActivity() {
             mostrarDialogoCrearCurso()
         }
     }
-
-    // --- LA MAGIA DEL REFRESH AUTOMÁTICO ---
     override fun onResume() {
         super.onResume()
-        // Cada vez que volvemos a esta pantalla (por ejemplo, después de eliminar un curso),
-        // recargamos la base de datos para que la lista visual se actualice sola.
         cargarCursos()
     }
 
@@ -124,7 +120,7 @@ class GestionCursosActivity : AppCompatActivity() {
                 database.miniEcoDao().insertarCurso(nuevoCurso)
                 Toast.makeText(this@GestionCursosActivity, "¡Curso creado con éxito!", Toast.LENGTH_SHORT).show()
                 dialog.dismiss()
-                cargarCursos() // Recargamos instantáneamente tras guardar
+                cargarCursos()
             }
         }
     }

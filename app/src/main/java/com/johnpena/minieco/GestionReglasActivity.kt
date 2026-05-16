@@ -21,7 +21,7 @@ class GestionReglasActivity : AppCompatActivity() {
     private lateinit var rvReglas: RecyclerView
     private lateinit var adapter: ReglaAdapter
 
-    // LISTAS CORREGIDAS
+
     private val todosLosDesechos = listOf(
         "Batería", "Biológico", "Papel", "Cartón", "Metal",
         "Vidrio", "Basura General", "Plástico", "Ropa", "Zapatos"
@@ -89,7 +89,7 @@ class GestionReglasActivity : AppCompatActivity() {
         mostrarDialogo(desechosDisponibles, todosLosColores, reglaAEditar)
     }
 
-    // Función universal para Crear o Editar
+
     private fun mostrarDialogo(desechos: List<String>, colores: List<String>, reglaAEditar: Regla?) {
         val builder = AlertDialog.Builder(this)
         builder.setTitle(if (reglaAEditar == null) "Nueva Regla" else "Editar Regla")
@@ -105,7 +105,7 @@ class GestionReglasActivity : AppCompatActivity() {
         val spinnerColor = Spinner(this)
         spinnerColor.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, colores)
 
-        // Si es editar, seleccionamos los valores que ya tenía
+
         if (reglaAEditar != null) {
             spinnerDesecho.setSelection(desechos.indexOf(reglaAEditar.tipoDesecho))
             spinnerColor.setSelection(colores.indexOf(reglaAEditar.colorTacho))

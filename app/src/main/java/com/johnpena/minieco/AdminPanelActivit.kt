@@ -30,14 +30,14 @@ class AdminPanelActivity : AppCompatActivity() {
             val prefs = getSharedPreferences("MiniEcoPrefs", Context.MODE_PRIVATE)
             prefs.edit()
                 .remove("cursoActivoId")
-                .putBoolean("is_logged_in", false) // <-- ESTO FALTABA PARA MATAR LA SESIÓN
+                .putBoolean("is_logged_in", false)
                 .apply()
 
             Toast.makeText(this, "Sesión cerrada. Reglas por defecto activadas.", Toast.LENGTH_SHORT).show()
             val intent = Intent(this, MainActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(intent)
-            finish() // Destruimos esta pantalla para que no pueda volver atrás
+            finish()
         }
     }
 }

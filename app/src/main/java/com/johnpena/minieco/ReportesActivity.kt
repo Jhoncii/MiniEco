@@ -5,11 +5,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
 import android.widget.Button
 import android.widget.ImageButton
-import android.widget.Spinner
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -34,11 +33,9 @@ class ReportesActivity : AppCompatActivity() {
     private var cursoId: Int = -1
     private var listaOriginal: List<ReporteTest> = emptyList()
 
-    // Variables para filtros
     private var fechaFiltro: String? = null
     private var estudianteFiltro: String = "Todos"
     private val formatoFecha = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-
     private var estudiantePreFiltro: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,11 +53,12 @@ class ReportesActivity : AppCompatActivity() {
 
         val btnFecha = findViewById<Button>(R.id.btnFiltroFecha)
         val btnLimpiar = findViewById<ImageButton>(R.id.btnLimpiarFiltros)
-        val spinnerEstudiantes = findViewById<Spinner>(R.id.spinnerFiltroEstudiante)
 
-        cargarReportes(spinnerEstudiantes)
+        // AutoCompleteTextView
+        val buscadorEstudiantes = findViewById<AutoCompleteTextView>(R.id.spinnerFiltroEstudiante)
 
-        // CALENDARIO
+        cargarReportes(buscadorEstudiantes)
+
         btnFecha.setOnClickListener {
             val c = Calendar.getInstance()
             DatePickerDialog(this, { _, year, month, day ->
@@ -71,42 +69,36 @@ class ReportesActivity : AppCompatActivity() {
             }, c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH)).show()
         }
 
-        // LIMPIAR FILTROS
         btnLimpiar.setOnClickListener {
             fechaFiltro = null
             estudianteFiltro = "Todos"
             btnFecha.text = "📅 Seleccionar Fecha"
-            spinnerEstudiantes.setSelection(0)
+            buscadorEstudiantes.setText("")
             aplicarFiltros()
         }
 
-        // FILTRO POR ESTUDIANTE
-        spinnerEstudiantes.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                estudianteFiltro = parent?.getItemAtPosition(position).toString()
-                aplicarFiltros()
-            }
-            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        buscadorEstudiantes.setOnItemClickListener { parent, _, position, _ ->
+            val seleccion = parent.getItemAtPosition(position).toString()
+            estudianteFiltro = if (seleccion == "Mostrar Todos") "Todos" else seleccion.split("\n")[0].trim()
+            aplicarFiltros()
         }
     }
 
-    private fun cargarReportes(spinner: Spinner) {
+    private fun cargarReportes(buscador: AutoCompleteTextView) {
         lifecycleScope.launch {
             listaOriginal = database.miniEcoDao().obtenerReportesPorCurso(cursoId)
 
             if (estudiantePreFiltro != null) {
-                // SI VENIMOS DIRECTO DEL ESTUDIANTE: Ocultamos el Spinner y fijamos el filtro
-                spinner.visibility = View.GONE
-                estudianteFiltro = estudiantePreFiltro!!
-                findViewById<TextView>(R.id.tvTituloReportes).text = "Reportes de $estudianteFiltro" // Opcional, si le pones ID a tu título
+                buscador.visibility = View.GONE
+                estudianteFiltro = estudiantePreFiltro!!.split("(")[0].trim()
+                findViewById<TextView>(R.id.tvTituloReportes).text = "Historial de $estudianteFiltro"
             } else {
-                // SI VENIMOS DEL MENÚ GENERAL: Llenamos el Spinner normal
-                spinner.visibility = View.VISIBLE
-                val nombresUnicos = mutableListOf("Todos")
-                nombresUnicos.addAll(listaOriginal.map { it.nombreEstudiante }.distinct())
-                spinner.adapter = ArrayAdapter(this@ReportesActivity, android.R.layout.simple_spinner_item, nombresUnicos).apply {
-                    setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-                }
+                buscador.visibility = View.VISIBLE
+                val sugerencias = mutableListOf("Mostrar Todos")
+                sugerencias.addAll(listaOriginal.map { "${it.nombreEstudiante}" }.distinct())
+
+                val arrayAdapter = ArrayAdapter(this@ReportesActivity, android.R.layout.simple_dropdown_item_1line, sugerencias)
+                buscador.setAdapter(arrayAdapter)
             }
             aplicarFiltros()
         }
@@ -115,85 +107,74 @@ class ReportesActivity : AppCompatActivity() {
     private fun aplicarFiltros() {
         var listaFiltrada = listaOriginal
 
-        // Filtro de Fecha
         if (fechaFiltro != null) {
             listaFiltrada = listaFiltrada.filter { formatoFecha.format(Date(it.fecha)) == fechaFiltro }
         }
 
-        // Filtro de Estudiante
         if (estudianteFiltro != "Todos") {
-            listaFiltrada = listaFiltrada.filter { it.nombreEstudiante == estudianteFiltro }
+            listaFiltrada = listaFiltrada.filter { it.nombreEstudiante.contains(estudianteFiltro, ignoreCase = true) }
         }
 
         adapter.actualizarLista(listaFiltrada)
     }
 
-    // EL CHISME (Leer el JSON)
     private fun mostrarDetalleReporte(reporte: ReporteTest) {
         var mensaje = "Nota Final: ${reporte.aciertos}/${reporte.totalPreguntas}\n\n"
-
         try {
             val jsonArray = JSONArray(reporte.detallesJson)
             for (i in 0 until jsonArray.length()) {
                 val obj = jsonArray.getJSONObject(i)
-                val desecho = obj.getString("desecho")
-                val elegido = obj.getString("colorElegido")
-                val esCorrecto = obj.getBoolean("esCorrecto")
-
-                val icono = if (esCorrecto) "✅" else "❌"
-                mensaje += "${i + 1}. $desecho -> $elegido $icono\n"
+                mensaje += "${i + 1}. ${obj.getString("desecho")} -> ${obj.getString("colorElegido")} ${if (obj.getBoolean("esCorrecto")) "✅" else "❌"}\n"
             }
-        } catch (e: Exception) {
-            mensaje += "Detalles no disponibles."
-        }
+        } catch (e: Exception) { mensaje += "Detalles no disponibles." }
 
         AlertDialog.Builder(this)
-            .setTitle("Reporte de ${reporte.nombreEstudiante}")
+            .setTitle(reporte.nombreEstudiante)
             .setMessage(mensaje)
             .setPositiveButton("Cerrar", null)
             .show()
     }
-}
 
-// --- EL ADAPTER (Lo pongo aquí mismo para ahorrarte crear otro archivo) ---
-class ReporteAdapter(
-    private var reportes: List<ReporteTest>,
-    private val onClick: (ReporteTest) -> Unit
-) : RecyclerView.Adapter<ReporteAdapter.ReporteViewHolder>() {
 
-    private val format = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+    class ReporteAdapter(
+        private var reportes: List<com.johnpena.minieco.database.ReporteTest>,
+        private val onClick: (com.johnpena.minieco.database.ReporteTest) -> Unit
+    ) : androidx.recyclerview.widget.RecyclerView.Adapter<ReporteAdapter.ReporteViewHolder>() {
 
-    inner class ReporteViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val tvNombre = itemView.findViewById<TextView>(R.id.tvReporteEstudiante)
-        val tvFecha = itemView.findViewById<TextView>(R.id.tvReporteFecha)
-        val tvNota = itemView.findViewById<TextView>(R.id.tvReporteNota)
-    }
+        private val format = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault())
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ReporteViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_reporte, parent, false)
-        return ReporteViewHolder(view)
-    }
-
-    override fun onBindViewHolder(holder: ReporteViewHolder, position: Int) {
-        val rep = reportes[position]
-        holder.tvNombre.text = rep.nombreEstudiante
-        holder.tvFecha.text = format.format(Date(rep.fecha))
-
-        // Pinta la nota de rojo si reprobó (menos de la mitad)
-        holder.tvNota.text = "${rep.aciertos}/${rep.totalPreguntas}"
-        if (rep.aciertos < (rep.totalPreguntas / 2.0)) {
-            holder.tvNota.setTextColor(android.graphics.Color.parseColor("#F44336"))
-        } else {
-            holder.tvNota.setTextColor(android.graphics.Color.parseColor("#4CAF50"))
+        inner class ReporteViewHolder(itemView: android.view.View) : androidx.recyclerview.widget.RecyclerView.ViewHolder(itemView) {
+            val tvNombre = itemView.findViewById<android.widget.TextView>(R.id.tvReporteEstudiante)
+            val tvFecha = itemView.findViewById<android.widget.TextView>(R.id.tvReporteFecha)
+            val tvNota = itemView.findViewById<android.widget.TextView>(R.id.tvReporteNota)
         }
 
-        holder.itemView.setOnClickListener { onClick(rep) }
-    }
+        override fun onCreateViewHolder(parent: android.view.ViewGroup, viewType: Int): ReporteViewHolder {
+            val view = android.view.LayoutInflater.from(parent.context).inflate(R.layout.item_reporte, parent, false)
+            return ReporteViewHolder(view)
+        }
 
-    override fun getItemCount() = reportes.size
+        override fun onBindViewHolder(holder: ReporteViewHolder, position: Int) {
+            val rep = reportes[position]
+            holder.tvNombre.text = rep.nombreEstudiante
+            holder.tvFecha.text = format.format(java.util.Date(rep.fecha))
 
-    fun actualizarLista(nuevaLista: List<ReporteTest>) {
-        reportes = nuevaLista
-        notifyDataSetChanged()
+            // Pinta la nota de rojo si reprobó (menos de la mitad)
+            holder.tvNota.text = "${rep.aciertos}/${rep.totalPreguntas}"
+            if (rep.aciertos < (rep.totalPreguntas / 2.0)) {
+                holder.tvNota.setTextColor(android.graphics.Color.parseColor("#F44336"))
+            } else {
+                holder.tvNota.setTextColor(android.graphics.Color.parseColor("#4CAF50"))
+            }
+
+            holder.itemView.setOnClickListener { onClick(rep) }
+        }
+
+        override fun getItemCount() = reportes.size
+
+        fun actualizarLista(nuevaLista: List<com.johnpena.minieco.database.ReporteTest>) {
+            reportes = nuevaLista
+            notifyDataSetChanged()
+        }
     }
 }
